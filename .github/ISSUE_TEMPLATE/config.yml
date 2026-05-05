@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Support guidance
+    url: https://github.com/AntonioIRK/gemini-web-openclaw-skill/blob/main/SUPPORT.md
+    about: Review support expectations before opening an issue.
+  - name: Security disclosure
+    url: https://github.com/AntonioIRK/gemini-web-openclaw-skill/blob/main/SECURITY.md
+    about: Use SECURITY.md for vulnerability reporting rather than public issues.

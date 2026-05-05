@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-label="Gemini Web for OpenClaw overview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <text x="80" y="110" fill="#f8fafc" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="42" font-weight="700">Gemini Web for OpenClaw</text>
+  <text x="80" y="155" fill="#cbd5e1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22">Self-hosted Gemini Web account-session automation</text>
+
+  <rect x="80" y="220" rx="22" ry="22" width="290" height="250" fill="#1e293b" stroke="#334155"/>
+  <text x="110" y="270" fill="#93c5fd" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700">OpenClaw operator</text>
+  <text x="110" y="318" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• setup.sh</text>
+  <text x="110" y="355" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• login.sh</text>
+  <text x="110" y="392" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• doctor.sh</text>
+  <text x="110" y="429" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• inspect-home.sh</text>
+
+  <rect x="455" y="220" rx="22" ry="22" width="290" height="250" fill="#1e293b" stroke="#334155"/>
+  <text x="485" y="270" fill="#86efac" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700">Stable public core</text>
+  <text x="485" y="318" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• chat-ask</text>
+  <text x="485" y="355" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• image-create</text>
+  <text x="485" y="392" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• image-edit</text>
+  <text x="485" y="435" fill="#94a3b8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">Authenticated browser profile required</text>
+
+  <rect x="830" y="220" rx="22" ry="22" width="290" height="250" fill="#1e293b" stroke="#334155"/>
+  <text x="860" y="270" fill="#fca5a5" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="22" font-weight="700">Experimental Storybook</text>
+  <text x="860" y="318" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• smoke</text>
+  <text x="860" y="355" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• share-link create</text>
+  <text x="860" y="392" fill="#e2e8f0" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">• PDF/export not promised</text>
+  <text x="860" y="435" fill="#94a3b8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16">Current-account evidence, not broad guarantee</text>
+
+  <path d="M370 345 C410 345, 420 345, 455 345" stroke="#64748b" stroke-width="4" fill="none"/>
+  <path d="M745 345 C780 345, 790 345, 830 345" stroke="#64748b" stroke-width="4" fill="none"/>
+  <circle cx="452" cy="345" r="6" fill="#64748b"/>
+  <circle cx="827" cy="345" r="6" fill="#64748b"/>
+
+  <text x="80" y="575" fill="#cbd5e1" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20">Honest contract: browser account-session automation, no CAPTCHA/2FA bypass, no API-key framing.</text>
+  <text x="80" y="615" fill="#94a3b8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="18">Recommended public framing: self-hosted operator tool with stable chat/image core and experimental Storybook surface.</text>
+</svg>
