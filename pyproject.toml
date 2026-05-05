@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openclaw-gemini-web-skill"
+version = "0.1.0"
+description = "Gemini Web account-session browser automation for OpenClaw"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "playwright>=1.52.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+gemini-web-skill = "openclaw_gemini_web.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

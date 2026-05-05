@@ -1,0 +1,27 @@
+.venv/
+.audit-venv/
+.audit-run/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+.gemini-web-profile/
+.gemini-storybook-profile/
+tmp/
+playwright-report/
+test-results/
+*.trace.zip
+*.har
+*.sqlite
+*.sqlite-journal
+Cookies
+Login Data
+Web Data
+
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
