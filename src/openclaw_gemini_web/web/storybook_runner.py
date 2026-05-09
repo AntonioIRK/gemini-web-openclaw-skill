@@ -4,6 +4,8 @@ from pathlib import Path
 import re
 import time
 
+from playwright.sync_api import Error
+
 from ..auth.login_flow import require_login
 from ..exceptions import GenerationTimeoutError, GeminiWebError, GoogleRuntimeError13, PromptSubmissionError, ShareLinkNotFoundError, StorybookNotAvailableError
 from ..export.pdf_export import export_pdf
@@ -125,7 +127,7 @@ class StorybookRunner(GeminiWebRunnerBase):
             page.wait_for_timeout(1500)
             if "/gem/storybook" in page.url:
                 return True
-        except Exception:
+        except Error:
             pass
 
         for text in self.selectors.storybook_entry_texts:
@@ -270,7 +272,7 @@ class StorybookRunner(GeminiWebRunnerBase):
         try:
             page.goto(f"{self.config.base_url.rstrip('/')}/gem/storybook", wait_until="domcontentloaded")
             page.wait_for_timeout(2500)
-        except Exception:
+        except Error:
             pass
 
         self._reopen_matching_history_item(page, prompt)
