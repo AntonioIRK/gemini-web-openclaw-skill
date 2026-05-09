@@ -53,9 +53,9 @@ def _profile_lock(profile_dir: Path):
             try:
                 fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 break
-            except BlockingIOError:
+            except BlockingIOError as err:
                 if time.time() >= deadline:
-                    raise TimeoutError(f"Timed out waiting for Gemini profile lock: {lock_path}")
+                    raise TimeoutError(f"Timed out waiting for Gemini profile lock: {lock_path}") from err
                 time.sleep(0.5)
         try:
             yield
