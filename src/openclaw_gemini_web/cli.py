@@ -16,7 +16,10 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("inspect-home")
 
     smoke = sub.add_parser("smoke")
-    smoke.add_argument("--prompt", default="Create a very short 3-scene bedtime story about a tiny robot fox learning to share.")
+    smoke.add_argument(
+        "--prompt",
+        default="Create a very short 3-scene bedtime story about a tiny robot fox learning to share.",
+    )
     smoke.add_argument("--timeout-seconds", type=int, default=600)
 
     image = sub.add_parser("image-create")
@@ -39,7 +42,9 @@ def build_parser() -> argparse.ArgumentParser:
     create = sub.add_parser("create")
     create.add_argument("--prompt", required=True)
     create.add_argument("--file", dest="files", action="append", default=[])
-    create.add_argument("--return-mode", choices=["share_link", "pdf"], default="share_link")
+    create.add_argument(
+        "--return-mode", choices=["share_link", "pdf"], default="share_link"
+    )
     create.add_argument("--output")
     create.add_argument("--timeout-seconds", type=int, default=300)
     create.add_argument("--debug", action="store_true")
@@ -99,7 +104,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
         return 0 if result.status == "success" else 1
     if args.command == "chat-ask":
-        result = client.ask_chat(prompt=args.prompt, timeout_seconds=args.timeout_seconds, new_thread=args.new_thread)
+        result = client.ask_chat(
+            prompt=args.prompt,
+            timeout_seconds=args.timeout_seconds,
+            new_thread=args.new_thread,
+        )
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
         return 0 if result.status == "success" else 1
     if args.command == "create":

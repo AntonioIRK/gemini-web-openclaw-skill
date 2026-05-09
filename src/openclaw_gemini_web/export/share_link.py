@@ -65,7 +65,9 @@ def extract_share_link(page: Page, selectors: SelectorBundle) -> str:
         if _is_share_link(href):
             return href
 
-    raise ShareLinkNotFoundError("Share link was not found in the current Storybook UI.")
+    raise ShareLinkNotFoundError(
+        "Share link was not found in the current Storybook UI."
+    )
 
 
 def _open_share_surfaces(page: Page, selectors: SelectorBundle) -> None:
