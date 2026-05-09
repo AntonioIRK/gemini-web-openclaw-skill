@@ -20,6 +20,7 @@ class StorybookRunner(GeminiWebRunnerBase):
     SHARE_LINK_RETRY_SECONDS = 120
     QUIET_COMPLETION_STREAK = 3
     RECOVERY_PROMPT = "Продолжи и заверши книгу в этой же ветке, не меняя тему. Когда книга будет готова, открой Share book и дай ссылку."
+    _TOKEN_REGEX = re.compile(r"[\w\u0400-\u04FF]+")
 
     def create(self, request: GeminiWebCreateRequest) -> GeminiWebCreateResult:
         diag = self.diagnostics.create()
@@ -398,5 +399,5 @@ class StorybookRunner(GeminiWebRunnerBase):
         return re.sub(r"\s+", " ", text.lower()).strip()
 
     def _meaningful_tokens(self, text: str) -> list[str]:
-        tokens = re.findall(r"[\w\u0400-\u04FF]+", text.lower())
+        tokens = self._TOKEN_REGEX.findall(text.lower())
         return [tok for tok in tokens if len(tok) > 2]
