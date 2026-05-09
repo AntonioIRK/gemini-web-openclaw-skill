@@ -544,10 +544,10 @@ class GeminiWebRunnerBase:
             raw = page.content()
         except Exception:
             return ""
-        stripped = re.sub(r"<script.*?</script>", " ", raw, flags=re.IGNORECASE | re.DOTALL)
+        raw_unescaped = html.unescape(raw)
+        stripped = re.sub(r"<script.*?</script>", " ", raw_unescaped, flags=re.IGNORECASE | re.DOTALL)
         stripped = re.sub(r"<style.*?</style>", " ", stripped, flags=re.IGNORECASE | re.DOTALL)
         stripped = re.sub(r"<[^>]+>", " ", stripped)
-        stripped = html.unescape(stripped)
         stripped = re.sub(r"\s+", " ", stripped).strip()
         return stripped[:12000]
 
