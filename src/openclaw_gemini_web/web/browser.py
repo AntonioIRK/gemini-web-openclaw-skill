@@ -48,6 +48,7 @@ def _profile_lock(profile_dir: Path):
     lock_path = profile_dir / ".openclaw-browser.lock"
     timeout_seconds = float(os.environ.get("GEMINI_WEB_PROFILE_LOCK_TIMEOUT", os.environ.get("GEMINI_STORYBOOK_PROFILE_LOCK_TIMEOUT", "300")))
     deadline = time.time() + timeout_seconds
+    sleep_time = 0.01
     with lock_path.open("w") as fh:
         while True:
             try:
@@ -56,7 +57,8 @@ def _profile_lock(profile_dir: Path):
             except BlockingIOError:
                 if time.time() >= deadline:
                     raise TimeoutError(f"Timed out waiting for Gemini profile lock: {lock_path}")
-                time.sleep(0.5)
+                time.sleep(sleep_time)
+                sleep_time = min(0.5, sleep_time * 1.5)
         try:
             yield
         finally:
