@@ -16,6 +16,7 @@ class GeminiWebConfig:
     headless: bool = False
     slow_mo_ms: int = 0
     remote_debugging_port: int | None = None
+    remote_debugging_address: str = "127.0.0.1"
     allow_cdp_attach: bool = False
     diagnostics_retention_days: int = 7
 
@@ -39,6 +40,7 @@ class GeminiWebConfig:
         headless = os.environ.get("GEMINI_WEB_HEADLESS", os.environ.get("GEMINI_STORYBOOK_HEADLESS", "0")) in {"1", "true", "TRUE"}
         slow_mo_ms = int(os.environ.get("GEMINI_WEB_SLOW_MO_MS", os.environ.get("GEMINI_STORYBOOK_SLOW_MO_MS", "0")))
         remote_debugging_port = os.environ.get("GEMINI_WEB_REMOTE_DEBUGGING_PORT", os.environ.get("GEMINI_STORYBOOK_REMOTE_DEBUGGING_PORT", "")).strip()
+        remote_debugging_address = os.environ.get("GEMINI_WEB_REMOTE_DEBUGGING_ADDRESS", os.environ.get("GEMINI_STORYBOOK_REMOTE_DEBUGGING_ADDRESS", "127.0.0.1")).strip()
         allow_cdp_attach = os.environ.get("GEMINI_WEB_ALLOW_CDP_ATTACH", os.environ.get("GEMINI_STORYBOOK_ALLOW_CDP_ATTACH", "0")) in {"1", "true", "TRUE"}
         diagnostics_retention_days = int(os.environ.get("GEMINI_WEB_DIAGNOSTICS_RETENTION_DAYS", os.environ.get("GEMINI_STORYBOOK_DIAGNOSTICS_RETENTION_DAYS", "7")))
         return cls(
@@ -50,6 +52,7 @@ class GeminiWebConfig:
             headless=headless,
             slow_mo_ms=slow_mo_ms,
             remote_debugging_port=int(remote_debugging_port) if remote_debugging_port else None,
+            remote_debugging_address=remote_debugging_address,
             allow_cdp_attach=allow_cdp_attach,
             diagnostics_retention_days=diagnostics_retention_days,
         )
