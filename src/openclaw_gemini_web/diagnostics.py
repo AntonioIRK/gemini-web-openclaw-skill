@@ -35,12 +35,16 @@ class DiagnosticsManager:
             if mtime < cutoff:
                 shutil.rmtree(path, ignore_errors=True)
 
-    def write_state(self, diag: RunDiagnostics, state: WorkflowState, extra: dict | None = None) -> None:
+    def write_state(
+        self, diag: RunDiagnostics, state: WorkflowState, extra: dict | None = None
+    ) -> None:
         diag.state = state
         payload = {"state": state.value}
         if extra:
             payload["extra"] = extra
-        (diag.run_dir / "state.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2))
+        (diag.run_dir / "state.json").write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2)
+        )
         with (diag.run_dir / "state-history.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(payload, ensure_ascii=False) + "\n")
 
@@ -54,7 +58,9 @@ class DiagnosticsManager:
         path.write_text(html, encoding="utf-8")
         diag.html_snapshot = str(path)
 
-    def write_screenshot(self, diag: RunDiagnostics, page, name: str = "page.png") -> str:
+    def write_screenshot(
+        self, diag: RunDiagnostics, page, name: str = "page.png"
+    ) -> str:
         path = diag.run_dir / name
         page.screenshot(path=str(path), full_page=True)
         diag.screenshots.append(str(path))
@@ -62,5 +68,7 @@ class DiagnosticsManager:
 
     def write_json(self, diag: RunDiagnostics, name: str, payload: dict) -> str:
         path = diag.run_dir / name
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         return str(path)

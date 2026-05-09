@@ -7,6 +7,8 @@ def test_accepts_gemini_share_links():
 
 
 def test_rejects_non_share_google_links():
-    assert not _is_share_link("https://accounts.google.com/ServiceLogin?continue=https://gemini.google.com/gem/storybook")
+    assert not _is_share_link(
+        "https://accounts.google.com/ServiceLogin?continue=https://gemini.google.com/gem/storybook"
+    )
     assert not _is_share_link("https://gemini.google.com/gem/storybook")
     assert not _is_share_link(None)

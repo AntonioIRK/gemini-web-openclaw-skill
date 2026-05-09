@@ -1,5 +1,8 @@
 from openclaw_gemini_web.models import WorkflowState
-from openclaw_gemini_web.web.state_machine import GeminiWebStateMachine, StorybookStateMachine
+from openclaw_gemini_web.web.state_machine import (
+    GeminiWebStateMachine,
+    StorybookStateMachine,
+)
 
 
 def test_state_machine_advances():

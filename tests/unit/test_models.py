@@ -1,4 +1,9 @@
-from openclaw_gemini_web.models import GeminiWebCreateRequest, GeminiWebCreateResult, StorybookRequest, StorybookResult
+from openclaw_gemini_web.models import (
+    GeminiWebCreateRequest,
+    GeminiWebCreateResult,
+    StorybookRequest,
+    StorybookResult,
+)
 
 
 def test_request_defaults():

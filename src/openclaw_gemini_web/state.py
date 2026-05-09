@@ -19,12 +19,16 @@ class GeminiWebState:
 
     def save(self, state: dict) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.path.write_text(
+            json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
     def get_active_chat_url(self, mode: str) -> str | None:
         state = self.load()
         value = state.get("activeChats", {}).get(mode)
-        if isinstance(value, str) and value.startswith("https://gemini.google.com/app/"):
+        if isinstance(value, str) and value.startswith(
+            "https://gemini.google.com/app/"
+        ):
             return value
         return None
 

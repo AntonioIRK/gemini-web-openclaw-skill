@@ -16,11 +16,15 @@ from ..auth.profile import ensure_profile_dir
 
 
 def _fetch_cdp_ws_url(port: int) -> str:
-    with urllib.request.urlopen(f"http://127.0.0.1:{port}/json/version", timeout=5) as response:
+    with urllib.request.urlopen(
+        f"http://127.0.0.1:{port}/json/version", timeout=5
+    ) as response:
         payload = json.loads(response.read().decode("utf-8"))
     ws_url = payload.get("webSocketDebuggerUrl")
     if not ws_url:
-        raise RuntimeError(f"CDP endpoint on port {port} did not return webSocketDebuggerUrl")
+        raise RuntimeError(
+            f"CDP endpoint on port {port} did not return webSocketDebuggerUrl"
+        )
     return ws_url
 
 
@@ -33,10 +37,17 @@ def _prepare_browser_env() -> dict[str, str]:
 
 
 def _resolve_browser_executable() -> str | None:
-    explicit = os.environ.get("GEMINI_WEB_BROWSER_PATH", os.environ.get("GEMINI_STORYBOOK_BROWSER_PATH", "")).strip()
+    explicit = os.environ.get(
+        "GEMINI_WEB_BROWSER_PATH", os.environ.get("GEMINI_STORYBOOK_BROWSER_PATH", "")
+    ).strip()
     if explicit:
         return explicit
-    for candidate in ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser"):
+    for candidate in (
+        "google-chrome",
+        "google-chrome-stable",
+        "chromium",
+        "chromium-browser",
+    ):
         found = shutil.which(candidate)
         if found:
             return found
@@ -46,7 +57,12 @@ def _resolve_browser_executable() -> str | None:
 @contextmanager
 def _profile_lock(profile_dir: Path):
     lock_path = profile_dir / ".openclaw-browser.lock"
-    timeout_seconds = float(os.environ.get("GEMINI_WEB_PROFILE_LOCK_TIMEOUT", os.environ.get("GEMINI_STORYBOOK_PROFILE_LOCK_TIMEOUT", "300")))
+    timeout_seconds = float(
+        os.environ.get(
+            "GEMINI_WEB_PROFILE_LOCK_TIMEOUT",
+            os.environ.get("GEMINI_STORYBOOK_PROFILE_LOCK_TIMEOUT", "300"),
+        )
+    )
     deadline = time.time() + timeout_seconds
     with lock_path.open("w") as fh:
         while True:
@@ -55,7 +71,9 @@ def _profile_lock(profile_dir: Path):
                 break
             except BlockingIOError:
                 if time.time() >= deadline:
-                    raise TimeoutError(f"Timed out waiting for Gemini profile lock: {lock_path}")
+                    raise TimeoutError(
+                        f"Timed out waiting for Gemini profile lock: {lock_path}"
+                    )
                 time.sleep(0.5)
         try:
             yield
@@ -75,8 +93,12 @@ def open_persistent_page(config: GeminiWebConfig):
                     raise RuntimeError(
                         "CDP attach is disabled by default. Set GEMINI_WEB_ALLOW_CDP_ATTACH=1 only when you intentionally want to attach to an existing browser session."
                     )
-                browser = p.chromium.connect_over_cdp(_fetch_cdp_ws_url(config.remote_debugging_port))
-                context = browser.contexts[0] if browser.contexts else browser.new_context()
+                browser = p.chromium.connect_over_cdp(
+                    _fetch_cdp_ws_url(config.remote_debugging_port)
+                )
+                context = (
+                    browser.contexts[0] if browser.contexts else browser.new_context()
+                )
                 page = context.pages[0] if context.pages else context.new_page()
                 try:
                     yield context, page
@@ -91,7 +113,11 @@ def open_persistent_page(config: GeminiWebConfig):
                 accept_downloads=True,
                 executable_path=executable_path,
                 env=launch_env,
-                args=["--disable-gpu", "--disable-software-rasterizer", "--disable-dev-shm-usage"],
+                args=[
+                    "--disable-gpu",
+                    "--disable-software-rasterizer",
+                    "--disable-dev-shm-usage",
+                ],
             )
             page = context.pages[0] if context.pages else context.new_page()
             try:

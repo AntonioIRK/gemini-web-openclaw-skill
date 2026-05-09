@@ -5,6 +5,7 @@ from ..models import GeminiImageRequest, GeminiWebCreateRequest
 
 def run_openclaw_skill(payload: dict) -> dict:
     from ..client import GeminiWebClient
+
     mode = payload.get("mode", "create")
     client = GeminiWebClient()
 
