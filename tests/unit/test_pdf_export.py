@@ -20,3 +20,14 @@ def test_export_pdf_success(tmp_path):
 
     assert result == str(output_path.resolve())
     page.pdf.assert_called_once_with(path=str(output_path.resolve()), print_background=True)
+
+
+def test_export_pdf_exception(tmp_path):
+    page = Mock()
+    output_path = tmp_path / "test.pdf"
+    page.pdf.side_effect = Exception("Simulated Playwright error")
+
+    with pytest.raises(PdfExportFailedError, match="Simulated Playwright error"):
+        export_pdf(page, str(output_path))
+
+    page.pdf.assert_called_once_with(path=str(output_path.resolve()), print_background=True)
