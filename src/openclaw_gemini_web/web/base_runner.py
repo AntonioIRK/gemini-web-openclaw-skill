@@ -128,7 +128,6 @@ class GeminiWebRunnerBase:
             candidates.append(page.locator(selector))
         candidates.append(page.get_by_role("textbox"))
 
-        last_error = None
         for locator in candidates:
             try:
                 if locator.count() == 0:
@@ -152,7 +151,6 @@ class GeminiWebRunnerBase:
                     page.keyboard.press("Enter")
                 return
             except Exception:
-                last_error = True
                 continue
 
         # One more pass after a short wait, because the Storybook prompt field
@@ -181,7 +179,6 @@ class GeminiWebRunnerBase:
                     page.keyboard.press("Enter")
                 return
             except Exception:
-                last_error = True
                 continue
 
         raise PromptSubmissionError("Prompt input was not found in Gemini UI")
