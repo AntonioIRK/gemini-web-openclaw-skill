@@ -214,6 +214,12 @@ class StorybookRunner(GeminiWebRunnerBase):
         if missing:
             raise PromptSubmissionError(f"Input files do not exist: {missing}")
 
+    def _attempt_share_link_extraction(self, page, diag, runtime_meta: dict[str, object]) -> str:
+        runtime_meta["share_attempts"] = int(runtime_meta.get("share_attempts", 0)) + 1
+        self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
+        self._capture_page(diag, page, f"share-attempt-{runtime_meta['share_attempts']}")
+        return extract_share_link(page, self.selectors)
+
     def _extract_share_link_with_retry(self, page, deadline_seconds: int, prompt: str, diag, runtime_meta: dict[str, object]) -> str:
         deadline = time.time() + max(int(deadline_seconds), self.STORYBOOK_PATIENCE_SECONDS)
         last_error: Exception | None = None
@@ -226,10 +232,7 @@ class StorybookRunner(GeminiWebRunnerBase):
         while time.time() < deadline:
             try:
                 if self._page_matches_prompt(page, prompt) or self._page_has_storybook_share_surface(page):
-                    runtime_meta["share_attempts"] = int(runtime_meta.get("share_attempts", 0)) + 1
-                    self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
-                    self._capture_page(diag, page, f"share-attempt-{runtime_meta['share_attempts']}")
-                    return extract_share_link(page, self.selectors)
+                    return self._attempt_share_link_extraction(page, diag, runtime_meta)
                 if self._reopen_best_history_item(page, prompt):
                     runtime_meta["history_reopen_used"] = True
                     self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
@@ -249,10 +252,7 @@ class StorybookRunner(GeminiWebRunnerBase):
         if self._reopen_matching_history_item(page, prompt):
             runtime_meta["history_reopen_used"] = True
             try:
-                runtime_meta["share_attempts"] = int(runtime_meta.get("share_attempts", 0)) + 1
-                self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
-                self._capture_page(diag, page, f"share-attempt-{runtime_meta['share_attempts']}")
-                return extract_share_link(page, self.selectors)
+                return self._attempt_share_link_extraction(page, diag, runtime_meta)
             except ShareLinkNotFoundError as exc:
                 last_error = exc
 
@@ -260,10 +260,7 @@ class StorybookRunner(GeminiWebRunnerBase):
         while time.time() < recovery_deadline:
             try:
                 if self._page_matches_prompt(page, prompt) or self._page_has_storybook_share_surface(page):
-                    runtime_meta["share_attempts"] = int(runtime_meta.get("share_attempts", 0)) + 1
-                    self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
-                    self._capture_page(diag, page, f"share-attempt-{runtime_meta['share_attempts']}")
-                    return extract_share_link(page, self.selectors)
+                    return self._attempt_share_link_extraction(page, diag, runtime_meta)
                 last_error = ShareLinkNotFoundError("Recovered Storybook page does not yet expose a prompt match or share surface.")
             except ShareLinkNotFoundError as exc:
                 last_error = exc
