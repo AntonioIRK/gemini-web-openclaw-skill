@@ -1,6 +1,5 @@
 import pytest
 from unittest.mock import Mock
-from pathlib import Path
 
 from openclaw_gemini_web.export.pdf_export import export_pdf
 from openclaw_gemini_web.exceptions import PdfExportFailedError
