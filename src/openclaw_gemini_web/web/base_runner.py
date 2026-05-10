@@ -7,6 +7,8 @@ import mimetypes
 import re
 import time
 
+from playwright.sync_api import Error as PlaywrightError, TimeoutError as PlaywrightTimeoutError
+
 from ..auth.login_flow import is_logged_in, require_login
 from ..config import GeminiWebConfig
 from ..diagnostics import DiagnosticsManager
@@ -117,9 +119,9 @@ class GeminiWebRunnerBase:
                             starter.first.click(force=True)
                             page.wait_for_timeout(1200)
                             break
-                        except Exception:
+                        except (PlaywrightError, PlaywrightTimeoutError):
                             continue
-        except Exception:
+        except (PlaywrightError, PlaywrightTimeoutError):
             pass
 
         candidates = []
