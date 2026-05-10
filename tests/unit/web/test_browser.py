@@ -20,5 +20,5 @@ def test_fetch_cdp_ws_url_failure():
 
     with patch("urllib.request.urlopen") as mock_urlopen:
         mock_urlopen.return_value.__enter__.return_value = mock_response
-        with pytest.raises(RuntimeError, match="CDP endpoint on port 9222 did not return webSocketDebuggerUrl"):
+        with pytest.raises(RuntimeError, match=r"CDP endpoint on .*9222 did not return webSocketDebuggerUrl"):
             _fetch_cdp_ws_url(9222)
