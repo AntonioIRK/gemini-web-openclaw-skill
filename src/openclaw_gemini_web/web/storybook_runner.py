@@ -15,7 +15,6 @@ from .state_machine import GeminiWebStateMachine
 
 
 class StorybookRunner(GeminiWebRunnerBase):
-
     STORYBOOK_PATIENCE_SECONDS = 600
     SHARE_LINK_RETRY_SECONDS = 120
     QUIET_COMPLETION_STREAK = 3
@@ -87,14 +86,20 @@ class StorybookRunner(GeminiWebRunnerBase):
                 runtime_meta["final_page_url"] = getattr(page, "url", None)
                 self.diagnostics.write_state(diag, machine.current, runtime_meta)
                 self.diagnostics.write_console(diag, console_lines)
-                self.diagnostics.write_json(diag, "result.json", {
-                    "status": "success",
-                    "share_link": share_link,
-                    "title": title,
-                    "metadata": runtime_meta,
-                })
+                self.diagnostics.write_json(
+                    diag,
+                    "result.json",
+                    {
+                        "status": "success",
+                        "share_link": share_link,
+                        "title": title,
+                        "metadata": runtime_meta,
+                    },
+                )
                 self._write_run_summary(diag, "success", runtime_meta, title=title, share_link=share_link)
-                return GeminiWebCreateResult(status="success", share_link=share_link, title=title, debug_artifacts_path=str(diag.run_dir), metadata=runtime_meta)
+                return GeminiWebCreateResult(
+                    status="success", share_link=share_link, title=title, debug_artifacts_path=str(diag.run_dir), metadata=runtime_meta
+                )
         except GeminiWebError as exc:
             machine.advance(WorkflowState.FAILED)
             runtime_meta["final_page_url"] = getattr(page, "url", None)
@@ -104,7 +109,9 @@ class StorybookRunner(GeminiWebRunnerBase):
             self.diagnostics.write_console(diag, console_lines)
             self.diagnostics.write_json(diag, "error.json", self._error_payload(page, machine, exc.code, str(exc)) | {"metadata": runtime_meta})
             self._write_run_summary(diag, "error", runtime_meta, error_code=exc.code, error_message=str(exc))
-            return GeminiWebCreateResult(status="error", debug_artifacts_path=str(diag.run_dir), error_code=exc.code, error_message=str(exc), metadata=runtime_meta)
+            return GeminiWebCreateResult(
+                status="error", debug_artifacts_path=str(diag.run_dir), error_code=exc.code, error_message=str(exc), metadata=runtime_meta
+            )
         except Exception as exc:
             machine.advance(WorkflowState.FAILED)
             runtime_meta["final_page_url"] = getattr(page, "url", None)
@@ -114,7 +121,9 @@ class StorybookRunner(GeminiWebRunnerBase):
             self.diagnostics.write_console(diag, console_lines)
             self.diagnostics.write_json(diag, "error.json", self._error_payload(page, machine, "UNKNOWN_RUNTIME_ERROR", str(exc)) | {"metadata": runtime_meta})
             self._write_run_summary(diag, "error", runtime_meta, error_code="UNKNOWN_RUNTIME_ERROR", error_message=str(exc))
-            return GeminiWebCreateResult(status="error", debug_artifacts_path=str(diag.run_dir), error_code="UNKNOWN_RUNTIME_ERROR", error_message=str(exc), metadata=runtime_meta)
+            return GeminiWebCreateResult(
+                status="error", debug_artifacts_path=str(diag.run_dir), error_code="UNKNOWN_RUNTIME_ERROR", error_message=str(exc), metadata=runtime_meta
+            )
 
     def _locate_storybook(self, page) -> bool:
         if "/gem/storybook" in page.url:

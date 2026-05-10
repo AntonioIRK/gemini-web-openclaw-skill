@@ -1,0 +1,13 @@
+services:
+  gemini-web:
+    build: .
+    ports:
+      - "6080:6080" # noVNC port
+      - "5900:5900" # direct VNC port (optional)
+    volumes:
+      - ./.gemini-web-profile:/app/.gemini-web-profile
+      - ./tmp:/app/tmp
+    environment:
+      - DISPLAY=:99
+      - RESOLUTION=1280x800x24
+    command: tail -f /dev/null

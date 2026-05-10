@@ -22,8 +22,10 @@ Use it when you want OpenClaw to work with a real logged-in Gemini Web account f
 These are the surfaces this repo can honestly promise today:
 
 - `chat-ask`
+- `chat-ask-stream` (real-time streaming text output)
 - `image-create`
 - `image-edit`
+- `document-analysis` (upload files and query them)
 
 ## Experimental surfaces
 
@@ -63,6 +65,7 @@ That means:
 
 ## Quick start
 
+### Local Desktop Install
 ```bash
 cd ~/.openclaw/workspace/skills
 git clone https://github.com/AntonioIRK/gemini-web-openclaw-skill.git gemini-web
@@ -72,6 +75,14 @@ cd gemini-web
 ./scripts/gemini_web_doctor.sh
 ./scripts/gemini_web_inspect_home.sh
 ```
+
+### Docker Install (Headless VNC Auth)
+If you are running on a remote headless server, you can use the provided Docker environment. It runs Playwright via Xvfb and exposes a noVNC server on port `6080` for the initial Google login:
+```bash
+docker compose up -d
+docker compose exec gemini-web ./scripts/gemini_web_login.sh
+```
+See [Docker Guide](docs/docker.md) for more details.
 
 ## Example commands
 
@@ -110,9 +121,10 @@ Storybook currently belongs to **operator-validated evidence**, not to the **sta
 - persistent browser profile bootstrap
 - doctor command for environment/session heuristics
 - inspect-home command for Gemini surface visibility
-- chat flow with thread reuse
+- chat flow with thread reuse and text streaming
 - image-create flow
 - image-edit flow
+- document-analysis file upload flow
 - diagnostics capture on failures
 - repeated live Storybook share-link success on the current authenticated operator account
 

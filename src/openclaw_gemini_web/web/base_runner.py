@@ -89,11 +89,7 @@ class GeminiWebRunnerBase:
             page.wait_for_timeout(3000)
             self._capture_page(diag, page, "gemini-home")
             body = self._read_body_text(page)
-            suggestions = [
-                text
-                for text in ["Создать изображение", "Create image", "Создать музыку", "Storybook", "Gem-боты", "Мой контент"]
-                if text in body
-            ]
+            suggestions = [text for text in ["Создать изображение", "Create image", "Создать музыку", "Storybook", "Gem-боты", "Мой контент"] if text in body]
             return {
                 "base_url": self.config.base_url,
                 "page_url": page.url,
@@ -128,7 +124,6 @@ class GeminiWebRunnerBase:
             candidates.append(page.locator(selector))
         candidates.append(page.get_by_role("textbox"))
 
-        last_error = None
         for locator in candidates:
             try:
                 if locator.count() == 0:
@@ -152,7 +147,6 @@ class GeminiWebRunnerBase:
                     page.keyboard.press("Enter")
                 return
             except Exception:
-                last_error = True
                 continue
 
         # One more pass after a short wait, because the Storybook prompt field
@@ -181,7 +175,6 @@ class GeminiWebRunnerBase:
                     page.keyboard.press("Enter")
                 return
             except Exception:
-                last_error = True
                 continue
 
         raise PromptSubmissionError("Prompt input was not found in Gemini UI")
@@ -367,7 +360,9 @@ class GeminiWebRunnerBase:
     def _screenshot_image_element(self, page, image: dict, output_dir: Path, idx: int) -> str | None:
         try:
             if image.get("latest_response_only"):
-                locator = page.locator("model-response").last.locator("single-image img.image, generated-image img.image, img").nth(int(image.get("index", idx - 1)))
+                locator = (
+                    page.locator("model-response").last.locator("single-image img.image, generated-image img.image, img").nth(int(image.get("index", idx - 1)))
+                )
             else:
                 locator = page.locator("img").nth(int(image.get("index", idx - 1)))
             path = output_dir / f"generated-image-{idx}.png"
@@ -440,11 +435,7 @@ class GeminiWebRunnerBase:
         except Exception:
             pass
 
-        for selector in [
-            '[data-test-id="hidden-local-image-upload-button"]',
-            '[data-test-id="hidden-local-file-upload-button"]',
-            '[xapfileselectortrigger]'
-        ]:
+        for selector in ['[data-test-id="hidden-local-image-upload-button"]', '[data-test-id="hidden-local-file-upload-button"]', "[xapfileselectortrigger]"]:
             try:
                 trigger = page.locator(selector)
                 if trigger.count() == 0:
@@ -492,7 +483,9 @@ class GeminiWebRunnerBase:
             except Exception:
                 stop_visible = False
             try:
-                download_buttons = page.locator("model-response").last.get_by_role("button", name=re.compile("Скачать изображение|Скачать в полном размере|Download", re.I))
+                download_buttons = page.locator("model-response").last.get_by_role(
+                    "button", name=re.compile("Скачать изображение|Скачать в полном размере|Download", re.I)
+                )
                 ready = download_buttons.count() > 0
             except Exception:
                 ready = False
