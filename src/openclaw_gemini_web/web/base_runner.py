@@ -106,6 +106,33 @@ class GeminiWebRunnerBase:
                 "diagnostics": str(diag.run_dir),
             }
 
+    def _try_submit_candidates(self, page, candidates: list, prompt: str) -> bool:
+        for locator in candidates:
+            try:
+                if locator.count() == 0:
+                    continue
+                target = locator.first
+                target.click(force=True)
+                page.wait_for_timeout(300)
+                tag_name = (target.evaluate("el => el.tagName") or "").lower()
+                if tag_name == "textarea":
+                    target.fill(prompt)
+                else:
+                    page.keyboard.press("Control+A")
+                    page.keyboard.press("Backspace")
+                    page.wait_for_timeout(100)
+                    page.keyboard.insert_text(prompt)
+                page.wait_for_timeout(500)
+                self._send_prompt(page)
+                page.wait_for_timeout(800)
+                body_text = self._read_body_text(page)
+                if self._looks_unsent(page, body_text):
+                    page.keyboard.press("Enter")
+                return True
+            except Exception:
+                continue
+        return False
+
     def _submit_prompt(self, page, prompt: str) -> None:
         # Storybook often renders starter chips first, and only reveals the
         # actual prompt field after one of them is selected. Try that path
@@ -131,58 +158,14 @@ class GeminiWebRunnerBase:
             candidates.append(page.locator(selector))
         candidates.append(page.get_by_role("textbox"))
 
-        for locator in candidates:
-            try:
-                if locator.count() == 0:
-                    continue
-                target = locator.first
-                target.click(force=True)
-                page.wait_for_timeout(300)
-                tag_name = (target.evaluate("el => el.tagName") or "").lower()
-                if tag_name == "textarea":
-                    target.fill(prompt)
-                else:
-                    page.keyboard.press("Control+A")
-                    page.keyboard.press("Backspace")
-                    page.wait_for_timeout(100)
-                    page.keyboard.insert_text(prompt)
-                page.wait_for_timeout(500)
-                self._send_prompt(page)
-                page.wait_for_timeout(800)
-                body_text = self._read_body_text(page)
-                if self._looks_unsent(page, body_text):
-                    page.keyboard.press("Enter")
-                return
-            except Exception:
-                continue
+        if self._try_submit_candidates(page, candidates, prompt):
+            return
 
         # One more pass after a short wait, because the Storybook prompt field
         # can appear a moment after the starter chip is clicked.
         page.wait_for_timeout(1500)
-        for locator in candidates:
-            try:
-                if locator.count() == 0:
-                    continue
-                target = locator.first
-                target.click(force=True)
-                page.wait_for_timeout(300)
-                tag_name = (target.evaluate("el => el.tagName") or "").lower()
-                if tag_name == "textarea":
-                    target.fill(prompt)
-                else:
-                    page.keyboard.press("Control+A")
-                    page.keyboard.press("Backspace")
-                    page.wait_for_timeout(100)
-                    page.keyboard.insert_text(prompt)
-                page.wait_for_timeout(500)
-                self._send_prompt(page)
-                page.wait_for_timeout(800)
-                body_text = self._read_body_text(page)
-                if self._looks_unsent(page, body_text):
-                    page.keyboard.press("Enter")
-                return
-            except Exception:
-                continue
+        if self._try_submit_candidates(page, candidates, prompt):
+            return
 
         raise PromptSubmissionError("Prompt input was not found in Gemini UI")
 
