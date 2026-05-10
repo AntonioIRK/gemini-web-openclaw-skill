@@ -5,14 +5,7 @@ import re
 import time
 
 from ..auth.login_flow import require_login
-from ..exceptions import (
-    GenerationTimeoutError,
-    GeminiWebError,
-    GoogleRuntimeError13,
-    PromptSubmissionError,
-    ShareLinkNotFoundError,
-    StorybookNotAvailableError,
-)
+from ..exceptions import GenerationTimeoutError, GeminiWebError, GoogleRuntimeError13, PromptSubmissionError, ShareLinkNotFoundError, StorybookNotAvailableError
 from ..export.pdf_export import export_pdf
 from ..export.share_link import extract_share_link
 from ..models import GeminiWebCreateRequest, GeminiWebCreateResult, WorkflowState
@@ -32,9 +25,7 @@ class StorybookRunner(GeminiWebRunnerBase):
         machine = GeminiWebStateMachine()
         console_lines: list[str] = []
         runtime_meta: dict[str, object] = {
-            "patience_seconds": max(
-                int(request.timeout_seconds), self.STORYBOOK_PATIENCE_SECONDS
-            ),
+            "patience_seconds": max(int(request.timeout_seconds), self.STORYBOOK_PATIENCE_SECONDS),
             "recovery_prompt_used": False,
             "history_reopen_used": False,
             "share_attempts": 0,
@@ -43,10 +34,7 @@ class StorybookRunner(GeminiWebRunnerBase):
         page = None
         try:
             with open_persistent_page(self.config) as (context, page):
-                page.on(
-                    "console",
-                    lambda msg: console_lines.append(f"{msg.type}: {msg.text}"),
-                )
+                page.on("console", lambda msg: console_lines.append(f"{msg.type}: {msg.text}"))
                 machine.advance(WorkflowState.OPENING_GEMINI)
                 self.diagnostics.write_state(diag, machine.current)
                 page.goto(self.config.base_url, wait_until="domcontentloaded")
@@ -59,16 +47,12 @@ class StorybookRunner(GeminiWebRunnerBase):
                 machine.advance(WorkflowState.LOCATING_TARGET_SURFACE)
                 self.diagnostics.write_state(diag, machine.current)
                 if not self._locate_storybook(page):
-                    raise StorybookNotAvailableError(
-                        "Storybook entrypoint was not found in the current Gemini account"
-                    )
+                    raise StorybookNotAvailableError("Storybook entrypoint was not found in the current Gemini account")
                 self._capture_page(diag, page, "storybook-located")
 
                 if request.files:
                     machine.advance(WorkflowState.UPLOADING_FILES)
-                    self.diagnostics.write_state(
-                        diag, machine.current, {"files": request.files}
-                    )
+                    self.diagnostics.write_state(diag, machine.current, {"files": request.files})
                     self._upload_files(page, request.files)
 
                 machine.advance(WorkflowState.SUBMITTING_PROMPT)
@@ -78,13 +62,9 @@ class StorybookRunner(GeminiWebRunnerBase):
 
                 machine.advance(WorkflowState.WAITING_FOR_GENERATION)
                 self.diagnostics.write_state(diag, machine.current)
-                effective_timeout = max(
-                    int(request.timeout_seconds), self.STORYBOOK_PATIENCE_SECONDS
-                )
+                effective_timeout = max(int(request.timeout_seconds), self.STORYBOOK_PATIENCE_SECONDS)
                 try:
-                    self._wait_for_storybook_generation(
-                        page, effective_timeout, request.prompt, diag, runtime_meta
-                    )
+                    self._wait_for_storybook_generation(page, effective_timeout, request.prompt, diag, runtime_meta)
                 except GenerationTimeoutError:
                     self._recover_from_timeout(page, request.prompt)
                 self._capture_page(diag, page, "generation-finished")
@@ -97,18 +77,11 @@ class StorybookRunner(GeminiWebRunnerBase):
                     machine.advance(WorkflowState.COMPLETED)
                     self.diagnostics.write_state(diag, machine.current)
                     self.diagnostics.write_console(diag, console_lines)
-                    return GeminiWebCreateResult(
-                        status="success",
-                        pdf_path=pdf_path,
-                        title=title,
-                        debug_artifacts_path=str(diag.run_dir),
-                    )
+                    return GeminiWebCreateResult(status="success", pdf_path=pdf_path, title=title, debug_artifacts_path=str(diag.run_dir))
 
                 machine.advance(WorkflowState.EXTRACTING_SHARE_LINK)
                 self.diagnostics.write_state(diag, machine.current, runtime_meta)
-                share_link = self._extract_share_link_with_retry(
-                    page, effective_timeout, request.prompt, diag, runtime_meta
-                )
+                share_link = self._extract_share_link_with_retry(page, effective_timeout, request.prompt, diag, runtime_meta)
                 machine.advance(WorkflowState.COMPLETED)
                 runtime_meta["final_page_url"] = getattr(page, "url", None)
                 self.diagnostics.write_state(diag, machine.current, runtime_meta)
@@ -123,15 +96,9 @@ class StorybookRunner(GeminiWebRunnerBase):
                         "metadata": runtime_meta,
                     },
                 )
-                self._write_run_summary(
-                    diag, "success", runtime_meta, title=title, share_link=share_link
-                )
+                self._write_run_summary(diag, "success", runtime_meta, title=title, share_link=share_link)
                 return GeminiWebCreateResult(
-                    status="success",
-                    share_link=share_link,
-                    title=title,
-                    debug_artifacts_path=str(diag.run_dir),
-                    metadata=runtime_meta,
+                    status="success", share_link=share_link, title=title, debug_artifacts_path=str(diag.run_dir), metadata=runtime_meta
                 )
         except GeminiWebError as exc:
             machine.advance(WorkflowState.FAILED)
@@ -140,21 +107,10 @@ class StorybookRunner(GeminiWebRunnerBase):
             self.diagnostics.write_state(diag, machine.current, runtime_meta)
             self._capture_error_context(diag, page, machine, exc)
             self.diagnostics.write_console(diag, console_lines)
-            self.diagnostics.write_json(
-                diag,
-                "error.json",
-                self._error_payload(page, machine, exc.code, str(exc))
-                | {"metadata": runtime_meta},
-            )
-            self._write_run_summary(
-                diag, "error", runtime_meta, error_code=exc.code, error_message=str(exc)
-            )
+            self.diagnostics.write_json(diag, "error.json", self._error_payload(page, machine, exc.code, str(exc)) | {"metadata": runtime_meta})
+            self._write_run_summary(diag, "error", runtime_meta, error_code=exc.code, error_message=str(exc))
             return GeminiWebCreateResult(
-                status="error",
-                debug_artifacts_path=str(diag.run_dir),
-                error_code=exc.code,
-                error_message=str(exc),
-                metadata=runtime_meta,
+                status="error", debug_artifacts_path=str(diag.run_dir), error_code=exc.code, error_message=str(exc), metadata=runtime_meta
             )
         except Exception as exc:
             machine.advance(WorkflowState.FAILED)
@@ -163,25 +119,10 @@ class StorybookRunner(GeminiWebRunnerBase):
             self.diagnostics.write_state(diag, machine.current, runtime_meta)
             self._capture_error_context(diag, page, machine, exc)
             self.diagnostics.write_console(diag, console_lines)
-            self.diagnostics.write_json(
-                diag,
-                "error.json",
-                self._error_payload(page, machine, "UNKNOWN_RUNTIME_ERROR", str(exc))
-                | {"metadata": runtime_meta},
-            )
-            self._write_run_summary(
-                diag,
-                "error",
-                runtime_meta,
-                error_code="UNKNOWN_RUNTIME_ERROR",
-                error_message=str(exc),
-            )
+            self.diagnostics.write_json(diag, "error.json", self._error_payload(page, machine, "UNKNOWN_RUNTIME_ERROR", str(exc)) | {"metadata": runtime_meta})
+            self._write_run_summary(diag, "error", runtime_meta, error_code="UNKNOWN_RUNTIME_ERROR", error_message=str(exc))
             return GeminiWebCreateResult(
-                status="error",
-                debug_artifacts_path=str(diag.run_dir),
-                error_code="UNKNOWN_RUNTIME_ERROR",
-                error_message=str(exc),
-                metadata=runtime_meta,
+                status="error", debug_artifacts_path=str(diag.run_dir), error_code="UNKNOWN_RUNTIME_ERROR", error_message=str(exc), metadata=runtime_meta
             )
 
     def _locate_storybook(self, page) -> bool:
@@ -189,10 +130,7 @@ class StorybookRunner(GeminiWebRunnerBase):
             return True
 
         try:
-            page.goto(
-                f"{self.config.base_url.rstrip('/')}/gem/storybook",
-                wait_until="domcontentloaded",
-            )
+            page.goto(f"{self.config.base_url.rstrip('/')}/gem/storybook", wait_until="domcontentloaded")
             page.wait_for_timeout(1500)
             if "/gem/storybook" in page.url:
                 return True
@@ -208,14 +146,7 @@ class StorybookRunner(GeminiWebRunnerBase):
                     return True
         return False
 
-    def _wait_for_storybook_generation(
-        self,
-        page,
-        timeout_seconds: int,
-        prompt: str,
-        diag,
-        runtime_meta: dict[str, object],
-    ) -> None:
+    def _wait_for_storybook_generation(self, page, timeout_seconds: int, prompt: str, diag, runtime_meta: dict[str, object]) -> None:
         deadline = time.time() + timeout_seconds
         loop_count = 0
         quiet_streak = 0
@@ -226,35 +157,20 @@ class StorybookRunner(GeminiWebRunnerBase):
             body_text = self._read_body_text(page)
             google_error = self._detect_google_error(body_text)
             if google_error:
-                if (
-                    isinstance(google_error, GoogleRuntimeError13)
-                    and not recovered_error13
-                ):
+                if isinstance(google_error, GoogleRuntimeError13) and not recovered_error13:
                     recovered_error13 = True
-                    runtime_meta["google_error13_retries"] = (
-                        int(runtime_meta.get("google_error13_retries", 0)) + 1
-                    )
+                    runtime_meta["google_error13_retries"] = int(runtime_meta.get("google_error13_retries", 0)) + 1
                     runtime_meta["last_google_error"] = str(google_error)
-                    self.diagnostics.write_state(
-                        diag, WorkflowState.WAITING_FOR_GENERATION, runtime_meta
-                    )
+                    self.diagnostics.write_state(diag, WorkflowState.WAITING_FOR_GENERATION, runtime_meta)
                     self._recover_after_google_error13(page, prompt)
                     page.wait_for_timeout(2500)
                     continue
                 raise google_error
             try:
-                stop_visible = (
-                    page.get_by_role(
-                        "button", name=re.compile("Остановить|Stop", re.I)
-                    ).count()
-                    > 0
-                )
+                stop_visible = page.get_by_role("button", name=re.compile("Остановить|Stop", re.I)).count() > 0
             except Exception:
                 stop_visible = False
-            generating = (
-                any(text in body_text for text in self.selectors.generating_texts)
-                or stop_visible
-            )
+            generating = any(text in body_text for text in self.selectors.generating_texts) or stop_visible
             if generating:
                 saw_generation = True
                 quiet_streak = 0
@@ -262,46 +178,31 @@ class StorybookRunner(GeminiWebRunnerBase):
                 quiet_streak += 1
             if any(text in body_text for text in self.selectors.share_texts):
                 runtime_meta["generation_loops"] = loop_count
-                runtime_meta["generation_elapsed_seconds"] = int(
-                    timeout_seconds - max(0, deadline - time.time())
-                )
+                runtime_meta["generation_elapsed_seconds"] = int(timeout_seconds - max(0, deadline - time.time()))
                 runtime_meta["quiet_completion_streak"] = quiet_streak
                 return
             if saw_generation and quiet_streak >= self.QUIET_COMPLETION_STREAK:
                 runtime_meta["generation_loops"] = loop_count
-                runtime_meta["generation_elapsed_seconds"] = int(
-                    timeout_seconds - max(0, deadline - time.time())
-                )
+                runtime_meta["generation_elapsed_seconds"] = int(timeout_seconds - max(0, deadline - time.time()))
                 runtime_meta["quiet_completion_streak"] = quiet_streak
                 runtime_meta["generation_settled_without_share_text"] = True
-                self.diagnostics.write_state(
-                    diag, WorkflowState.WAITING_FOR_GENERATION, runtime_meta
-                )
+                self.diagnostics.write_state(diag, WorkflowState.WAITING_FOR_GENERATION, runtime_meta)
                 return
             if loop_count == 1 or loop_count % 4 == 0:
                 runtime_meta["generation_loops"] = loop_count
-                runtime_meta["generation_elapsed_seconds"] = int(
-                    timeout_seconds - max(0, deadline - time.time())
-                )
+                runtime_meta["generation_elapsed_seconds"] = int(timeout_seconds - max(0, deadline - time.time()))
                 runtime_meta["generating_visible"] = generating
                 runtime_meta["quiet_completion_streak"] = quiet_streak
-                self.diagnostics.write_state(
-                    diag, WorkflowState.WAITING_FOR_GENERATION, runtime_meta
-                )
+                self.diagnostics.write_state(diag, WorkflowState.WAITING_FOR_GENERATION, runtime_meta)
             page.wait_for_timeout(2000)
         runtime_meta["generation_loops"] = loop_count
         runtime_meta["generation_elapsed_seconds"] = timeout_seconds
         runtime_meta["quiet_completion_streak"] = quiet_streak
-        raise GenerationTimeoutError(
-            f"Storybook generation did not finish within {timeout_seconds} seconds"
-        )
+        raise GenerationTimeoutError(f"Storybook generation did not finish within {timeout_seconds} seconds")
 
     def _recover_after_google_error13(self, page, prompt: str) -> None:
         try:
-            page.goto(
-                f"{self.config.base_url.rstrip('/')}/gem/storybook",
-                wait_until="domcontentloaded",
-            )
+            page.goto(f"{self.config.base_url.rstrip('/')}/gem/storybook", wait_until="domcontentloaded")
             page.wait_for_timeout(2500)
         except Exception:
             pass
@@ -313,52 +214,29 @@ class StorybookRunner(GeminiWebRunnerBase):
         if missing:
             raise PromptSubmissionError(f"Input files do not exist: {missing}")
 
-    def _attempt_share_link_extraction(
-        self, page, diag, runtime_meta: dict[str, object]
-    ) -> str:
+    def _attempt_share_link_extraction(self, page, diag, runtime_meta: dict[str, object]) -> str:
         runtime_meta["share_attempts"] = int(runtime_meta.get("share_attempts", 0)) + 1
-        self.diagnostics.write_state(
-            diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta
-        )
-        self._capture_page(
-            diag, page, f"share-attempt-{runtime_meta['share_attempts']}"
-        )
+        self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
+        self._capture_page(diag, page, f"share-attempt-{runtime_meta['share_attempts']}")
         return extract_share_link(page, self.selectors)
 
-    def _extract_share_link_with_retry(
-        self,
-        page,
-        deadline_seconds: int,
-        prompt: str,
-        diag,
-        runtime_meta: dict[str, object],
-    ) -> str:
-        deadline = time.time() + max(
-            int(deadline_seconds), self.STORYBOOK_PATIENCE_SECONDS
-        )
+    def _extract_share_link_with_retry(self, page, deadline_seconds: int, prompt: str, diag, runtime_meta: dict[str, object]) -> str:
+        deadline = time.time() + max(int(deadline_seconds), self.STORYBOOK_PATIENCE_SECONDS)
         last_error: Exception | None = None
 
         if not self._page_has_storybook_share_surface(page):
             if self._reopen_best_history_item(page, prompt):
                 runtime_meta["history_reopen_used"] = True
-                self.diagnostics.write_state(
-                    diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta
-                )
+                self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
 
         while time.time() < deadline:
             try:
-                if self._page_matches_prompt(
-                    page, prompt
-                ) or self._page_has_storybook_share_surface(page):
+                if self._page_matches_prompt(page, prompt) or self._page_has_storybook_share_surface(page):
                     return self._attempt_share_link_extraction(page, diag, runtime_meta)
                 if self._reopen_best_history_item(page, prompt):
                     runtime_meta["history_reopen_used"] = True
-                    self.diagnostics.write_state(
-                        diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta
-                    )
-                last_error = ShareLinkNotFoundError(
-                    "Current Storybook page does not yet expose a prompt match or share surface."
-                )
+                    self.diagnostics.write_state(diag, WorkflowState.EXTRACTING_SHARE_LINK, runtime_meta)
+                last_error = ShareLinkNotFoundError("Current Storybook page does not yet expose a prompt match or share surface.")
             except ShareLinkNotFoundError as exc:
                 last_error = exc
             page.wait_for_timeout(15000)
@@ -381,31 +259,22 @@ class StorybookRunner(GeminiWebRunnerBase):
         recovery_deadline = time.time() + self.SHARE_LINK_RETRY_SECONDS
         while time.time() < recovery_deadline:
             try:
-                if self._page_matches_prompt(
-                    page, prompt
-                ) or self._page_has_storybook_share_surface(page):
+                if self._page_matches_prompt(page, prompt) or self._page_has_storybook_share_surface(page):
                     return self._attempt_share_link_extraction(page, diag, runtime_meta)
-                last_error = ShareLinkNotFoundError(
-                    "Recovered Storybook page does not yet expose a prompt match or share surface."
-                )
+                last_error = ShareLinkNotFoundError("Recovered Storybook page does not yet expose a prompt match or share surface.")
             except ShareLinkNotFoundError as exc:
                 last_error = exc
             page.wait_for_timeout(10000)
 
         if last_error:
             raise last_error
-        raise ShareLinkNotFoundError(
-            "Share link was not found after the full Storybook patience budget."
-        )
+        raise ShareLinkNotFoundError("Share link was not found after the full Storybook patience budget.")
 
     def _recover_from_timeout(self, page, prompt: str) -> None:
         # Late completion happens on this account. Refresh the Storybook root,
         # open the newest book from history, and try to continue from there.
         try:
-            page.goto(
-                f"{self.config.base_url.rstrip('/')}/gem/storybook",
-                wait_until="domcontentloaded",
-            )
+            page.goto(f"{self.config.base_url.rstrip('/')}/gem/storybook", wait_until="domcontentloaded")
             page.wait_for_timeout(2500)
         except Exception:
             pass
@@ -486,9 +355,7 @@ class StorybookRunner(GeminiWebRunnerBase):
             pass
         return False
 
-    def _write_run_summary(
-        self, diag, status: str, runtime_meta: dict[str, object], **extra
-    ) -> None:
+    def _write_run_summary(self, diag, status: str, runtime_meta: dict[str, object], **extra) -> None:
         payload = {
             "status": status,
             "stage": diag.state.value,
@@ -496,24 +363,16 @@ class StorybookRunner(GeminiWebRunnerBase):
             "google_error13_retries": runtime_meta.get("google_error13_retries", 0),
             "recovery_prompt_used": runtime_meta.get("recovery_prompt_used", False),
             "history_reopen_used": runtime_meta.get("history_reopen_used", False),
-            "generation_elapsed_seconds": runtime_meta.get(
-                "generation_elapsed_seconds"
-            ),
+            "generation_elapsed_seconds": runtime_meta.get("generation_elapsed_seconds"),
             "generating_visible": runtime_meta.get("generating_visible"),
             "final_page_url": runtime_meta.get("final_page_url"),
-            "likely_cause": self._likely_cause(
-                runtime_meta, status, extra.get("error_code")
-            ),
-            "next_step": self._suggested_next_step(
-                runtime_meta, status, extra.get("error_code")
-            ),
+            "likely_cause": self._likely_cause(runtime_meta, status, extra.get("error_code")),
+            "next_step": self._suggested_next_step(runtime_meta, status, extra.get("error_code")),
         }
         payload.update({k: v for k, v in extra.items() if v is not None})
         self.diagnostics.write_json(diag, "summary.json", payload)
 
-    def _likely_cause(
-        self, runtime_meta: dict[str, object], status: str, error_code: str | None
-    ) -> str:
+    def _likely_cause(self, runtime_meta: dict[str, object], status: str, error_code: str | None) -> str:
         if status == "success":
             if runtime_meta.get("google_error13_retries"):
                 return "google-flake-recovered"
@@ -530,9 +389,7 @@ class StorybookRunner(GeminiWebRunnerBase):
             return "generation-timeout"
         return "unknown"
 
-    def _suggested_next_step(
-        self, runtime_meta: dict[str, object], status: str, error_code: str | None
-    ) -> str:
+    def _suggested_next_step(self, runtime_meta: dict[str, object], status: str, error_code: str | None) -> str:
         if status == "success":
             return "repeat-smoke-to-measure-stability"
         if error_code == "GOOGLE_RUNTIME_ERROR_13":

@@ -50,18 +50,20 @@ When an agent needs to explain auth to a human step by step, read `references/au
 
 - `inspect-home` for checking what Gemini surfaces are visible in the account
 - `chat-ask` for normal Gemini chat requests with thread reuse
+- `chat-ask-stream` for real-time text streaming of the chat response
 - `image-create` for running a real Gemini Web image-generation prompt
 - `image-edit` for editing one or more local/inbound images through the real Gemini Web UI
+- `document-analysis` for uploading files and querying them for text analysis
 - `smoke` for a short Storybook diagnostic probe
 - `create` for the structured Storybook run returning share link or PDF
 
-Most reliable today: `chat-ask`, `image-create`, and `image-edit`.
+Most reliable today: `chat-ask`, `chat-ask-stream`, `image-create`, `image-edit`, and `document-analysis`.
 
 Agents should treat Storybook `smoke` as diagnostic-only. Storybook `create` is live-validated on the current account for `share_link` extraction, but it remains account-dependent and outside the stable public-release promise.
 
-For OpenClaw integration, this repo currently exposes four practical payload modes through the adapter layer: `chat-ask`, `image-create`, `image-edit`, and Storybook `create`, but only the first three belong to the validated public core.
+For OpenClaw integration, this repo currently exposes these payload modes through the adapter layer: `chat-ask`, `chat-ask-stream`, `image-create`, `image-edit`, `document-analysis`, and Storybook `create`.
 
-For `chat-ask` and `image-create`, default behavior is to continue the same Gemini chat thread across assistant-driven requests. Use `--new-thread` only when you intentionally want to switch topics and start a fresh branch.
+For `chat-ask`, `document-analysis` and `image-create`, default behavior is to continue the same Gemini chat thread across assistant-driven requests. Use `--new-thread` only when you intentionally want to switch topics and start a fresh branch.
 
 For Storybook, prefer `return_mode=share_link` first. That is the currently live-validated path.
 If you need the link, the practical live path is: open Storybook, pick the book from history/root if needed, then use the Share book panel and extract the generated URL.

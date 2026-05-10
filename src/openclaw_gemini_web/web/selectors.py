@@ -21,11 +21,13 @@ class SelectorBundle:
     )
     prompt_input_selectors: tuple[str, ...] = (
         'textarea[placeholder*="Gemini"]',
-        'textarea',
-        'rich-textarea .ql-editor',
-        'div.ql-editor',
+        "textarea",
+        "rich-textarea .ql-editor",
+        "div.ql-editor",
         '[contenteditable="true"]',
         '[role="textbox"]',
+        '[aria-label*="Gemini"]',
+        ".textarea-container textarea",
     )
     send_button_labels: tuple[str, ...] = (
         "Отправить сообщение",
@@ -36,8 +38,10 @@ class SelectorBundle:
     send_button_selectors: tuple[str, ...] = (
         'button[aria-label*="Отправ"]',
         'button[aria-label*="Send"]',
-        'mat-icon.send-icon',
-        '.send-icon',
+        "mat-icon.send-icon",
+        ".send-icon",
+        '[data-test-id="send-button"]',
+        "button.send-button",
     )
     generating_texts: tuple[str, ...] = (
         "Создаю",

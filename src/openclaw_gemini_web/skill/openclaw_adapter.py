@@ -3,8 +3,13 @@ from __future__ import annotations
 from ..models import GeminiImageRequest, GeminiWebCreateRequest
 
 
-def run_openclaw_skill(payload: dict) -> dict:
-    from ..client import GeminiWebClient
+from typing import Any
+
+
+from ..client import GeminiWebClient
+
+
+def run_openclaw_skill(payload: dict) -> dict | Any:
     mode = payload.get("mode", "create")
     client = GeminiWebClient()
 
@@ -15,7 +20,15 @@ def run_openclaw_skill(payload: dict) -> dict:
             new_thread=bool(payload.get("new_thread", False)),
         ).to_dict()
 
-    if mode in {"image-create", "image-edit"}:
+    if mode == "chat-ask-stream":
+        # Returns a generator yielding strings
+        return client.ask_chat_stream(
+            prompt=payload["prompt"],
+            timeout_seconds=int(payload.get("timeout_seconds", 120)),
+            new_thread=bool(payload.get("new_thread", False)),
+        )
+
+    if mode in {"image-create", "image-edit", "document-analysis"}:
         request = GeminiImageRequest(
             prompt=payload["prompt"],
             files=payload.get("files", []),

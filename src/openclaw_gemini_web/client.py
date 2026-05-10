@@ -35,5 +35,8 @@ class GeminiWebClient:
     def ask_chat(self, prompt: str, timeout_seconds: int = 120, new_thread: bool = False) -> GeminiWebResult:
         return self.chat_image_runner.ask_chat(prompt=prompt, timeout_seconds=timeout_seconds, new_thread=new_thread)
 
+    def ask_chat_stream(self, prompt: str, timeout_seconds: int = 120, new_thread: bool = False):
+        return self.chat_image_runner.ask_chat_stream(prompt=prompt, timeout_seconds=timeout_seconds, new_thread=new_thread)
+
 
 GeminiStorybookClient = GeminiWebClient
