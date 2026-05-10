@@ -17,6 +17,11 @@ from ..web.selectors import SelectorBundle
 from ..web.state_machine import GeminiWebStateMachine
 from ..models import WorkflowState
 
+UPLOAD_FILES_RE = re.compile("Загрузить файлы|Upload files", re.I)
+PHOTOS_RE = re.compile("Фото|Photos", re.I)
+UPLOAD_FILES_MENU_LABELS = [UPLOAD_FILES_RE, PHOTOS_RE]
+OPEN_UPLOAD_MENU_RE = re.compile("Открыть меню загрузки файлов|Open upload file menu", re.I)
+
 
 class GeminiWebRunnerBase:
     def __init__(self, config: GeminiWebConfig, diagnostics: DiagnosticsManager):
@@ -415,12 +420,9 @@ class GeminiWebRunnerBase:
             pass
 
         try:
-            open_menu = page.get_by_role("button", name=re.compile("Открыть меню загрузки файлов|Open upload file menu", re.I))
+            open_menu = page.get_by_role("button", name=OPEN_UPLOAD_MENU_RE)
             if open_menu.count() > 0:
-                for menu_label in [
-                    re.compile("Загрузить файлы|Upload files", re.I),
-                    re.compile("Фото|Photos", re.I),
-                ]:
+                for menu_label in UPLOAD_FILES_MENU_LABELS:
                     try:
                         open_menu.first.click(force=True)
                         page.wait_for_timeout(500)
