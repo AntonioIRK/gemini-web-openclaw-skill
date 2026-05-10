@@ -7,29 +7,38 @@ from openclaw_gemini_web.models import GeminiImageRequest, GeminiWebCreateReques
 
 @pytest.fixture
 def mock_config():
-    return MagicMock(spec=GeminiWebConfig)
+    config = MagicMock(spec=GeminiWebConfig)
+    config.diagnostics_root = "/tmp/test_diag"
+    config.diagnostics_retention_days = 10
+    return config
 
 @patch("openclaw_gemini_web.client.GeminiWebConfig.from_env")
 @patch("openclaw_gemini_web.client.DiagnosticsManager")
 @patch("openclaw_gemini_web.client.StorybookRunner")
 @patch("openclaw_gemini_web.client.ChatImageRunner")
 def test_client_init_default(mock_chat_image_runner, mock_storybook_runner, mock_diagnostics_manager, mock_from_env):
-    mock_from_env.return_value = MagicMock(spec=GeminiWebConfig)
+    config = MagicMock(spec=GeminiWebConfig)
+    config.diagnostics_root = "/tmp/env_diag"
+    config.diagnostics_retention_days = 5
+    mock_from_env.return_value = config
+
     client = GeminiWebClient()
+
     mock_from_env.assert_called_once()
-    mock_diagnostics_manager.assert_called_once()
-    mock_storybook_runner.assert_called_once()
-    mock_chat_image_runner.assert_called_once()
-    assert client.config == mock_from_env.return_value
+    mock_diagnostics_manager.assert_called_once_with("/tmp/env_diag", 5)
+    mock_storybook_runner.assert_called_once_with(config, mock_diagnostics_manager.return_value)
+    mock_chat_image_runner.assert_called_once_with(config, mock_diagnostics_manager.return_value)
+    assert client.config == config
 
 @patch("openclaw_gemini_web.client.DiagnosticsManager")
 @patch("openclaw_gemini_web.client.StorybookRunner")
 @patch("openclaw_gemini_web.client.ChatImageRunner")
 def test_client_init_with_config(mock_chat_image_runner, mock_storybook_runner, mock_diagnostics_manager, mock_config):
     client = GeminiWebClient(config=mock_config)
-    mock_diagnostics_manager.assert_called_once()
-    mock_storybook_runner.assert_called_once()
-    mock_chat_image_runner.assert_called_once()
+
+    mock_diagnostics_manager.assert_called_once_with("/tmp/test_diag", 10)
+    mock_storybook_runner.assert_called_once_with(mock_config, mock_diagnostics_manager.return_value)
+    mock_chat_image_runner.assert_called_once_with(mock_config, mock_diagnostics_manager.return_value)
     assert client.config == mock_config
 
 @pytest.fixture
