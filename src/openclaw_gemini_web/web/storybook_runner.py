@@ -76,7 +76,7 @@ class StorybookRunner(GeminiWebRunnerBase):
                 if request.return_mode == "pdf":
                     machine.advance(WorkflowState.EXPORTING_PDF)
                     self.diagnostics.write_state(diag, machine.current)
-                    pdf_path = export_pdf(page, request.output_path)
+                    pdf_path = export_pdf(page, request.output_path, self.config.workspace_root)
                     machine.advance(WorkflowState.COMPLETED)
                     self.diagnostics.write_state(diag, machine.current)
                     self.diagnostics.write_console(diag, console_lines)
@@ -213,6 +213,9 @@ class StorybookRunner(GeminiWebRunnerBase):
 
     def _upload_files(self, page, files: list[str]) -> None:
         # Placeholder for live DOM wiring.
+        for f in files:
+            if not Path(f).resolve().is_relative_to(self.config.workspace_root):
+                raise ValueError(f"Path traversal detected for file: {f}")
         missing = [f for f in files if not Path(f).exists()]
         if missing:
             raise PromptSubmissionError(f"Input files do not exist: {missing}")
@@ -343,6 +346,12 @@ class StorybookRunner(GeminiWebRunnerBase):
         return len(set(prompt_tokens[:8]).intersection(body_tokens)) >= 4
 
     def _page_has_storybook_share_surface(self, page) -> bool:
+        try:
+            marker = page.locator('[data-test-id="share-button"]')
+            if marker.count() > 0:
+                return True
+        except Exception:
+            pass
         for text in self.selectors.share_texts:
             try:
                 button = page.get_by_role("button", name=text, exact=False)
@@ -350,12 +359,6 @@ class StorybookRunner(GeminiWebRunnerBase):
                     return True
             except Exception:
                 continue
-        try:
-            marker = page.locator('[data-test-id="share-button"]')
-            if marker.count() > 0:
-                return True
-        except Exception:
-            pass
         return False
 
     def _write_run_summary(self, diag, status: str, runtime_meta: dict[str, object], **extra) -> None:
