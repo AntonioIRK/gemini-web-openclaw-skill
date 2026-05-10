@@ -401,6 +401,9 @@ class GeminiWebRunnerBase:
             return False
 
     def _upload_files(self, page, files: list[str]) -> None:
+        for f in files:
+            if not Path(f).resolve().is_relative_to(self.config.workspace_root):
+                raise ValueError(f"Path traversal detected for file: {f}")
         missing = [f for f in files if not Path(f).exists()]
         if missing:
             raise PromptSubmissionError(f"Input files do not exist: {missing}")

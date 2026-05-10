@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 import json
 import shutil
+import re
 
 from .models import RunDiagnostics, WorkflowState
 
@@ -51,7 +52,8 @@ class DiagnosticsManager:
 
     def write_html(self, diag: RunDiagnostics, html: str) -> None:
         path = diag.run_dir / "page.html"
-        path.write_text(html, encoding="utf-8")
+        clean_html = re.sub(r"<(script|style).*?</\1>", "", html, flags=re.IGNORECASE | re.DOTALL)
+        path.write_text(clean_html, encoding="utf-8")
         diag.html_snapshot = str(path)
 
     def write_screenshot(self, diag: RunDiagnostics, page, name: str = "page.png") -> str:
