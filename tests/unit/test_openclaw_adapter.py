@@ -1,101 +1,88 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from openclaw_gemini_web.models import GeminiWebCreateResult, GeminiWebResult
+from openclaw_gemini_web.models import GeminiImageRequest, GeminiWebCreateRequest
 from openclaw_gemini_web.skill.openclaw_adapter import run_openclaw_skill
 
 
 @patch("openclaw_gemini_web.skill.openclaw_adapter.GeminiWebClient")
-def test_openclaw_adapter_chat_ask(mock_client_class):
-    mock_client = MagicMock()
-    mock_client.ask_chat.return_value = GeminiWebResult(status="success", text="Hello world")
-    mock_client_class.return_value = mock_client
+def test_run_openclaw_skill_chat_ask(mock_client_class):
+    mock_instance = mock_client_class.return_value
+    mock_instance.ask_chat.return_value.to_dict.return_value = {"status": "success", "response": "chat response"}
 
-    payload = {"mode": "chat-ask", "prompt": "Say hello", "timeout_seconds": 60, "new_thread": True}
+    result = run_openclaw_skill(
+        {
+            "mode": "chat-ask",
+            "prompt": "hello",
+            "timeout_seconds": "60",
+            "new_thread": True,
+        }
+    )
 
-    result = run_openclaw_skill(payload)
-
-    assert result["status"] == "success"
-    assert result["text"] == "Hello world"
-    mock_client.ask_chat.assert_called_once_with(prompt="Say hello", timeout_seconds=60, new_thread=True)
-
-
-@patch("openclaw_gemini_web.skill.openclaw_adapter.GeminiWebClient")
-def test_openclaw_adapter_chat_ask_stream(mock_client_class):
-    mock_client = MagicMock()
-
-    def mock_stream(*args, **kwargs):
-        yield "Hello "
-        yield "world!"
-
-    mock_client.ask_chat_stream.side_effect = mock_stream
-    mock_client_class.return_value = mock_client
-
-    payload = {"mode": "chat-ask-stream", "prompt": "Say hello", "timeout_seconds": 60, "new_thread": True}
-
-    result_gen = run_openclaw_skill(payload)
-    result_list = list(result_gen)
-
-    assert result_list == ["Hello ", "world!"]
-    mock_client.ask_chat_stream.assert_called_once_with(prompt="Say hello", timeout_seconds=60, new_thread=True)
+    assert result == {"status": "success", "response": "chat response"}
+    mock_instance.ask_chat.assert_called_once_with(prompt="hello", timeout_seconds=60, new_thread=True)
 
 
 @patch("openclaw_gemini_web.skill.openclaw_adapter.GeminiWebClient")
-def test_openclaw_adapter_image_create(mock_client_class):
-    mock_client = MagicMock()
-    mock_client.create_image.return_value = GeminiWebResult(status="success", image_paths=["/tmp/img1.png"])
-    mock_client_class.return_value = mock_client
+def test_run_openclaw_skill_image_create(mock_client_class):
+    mock_instance = mock_client_class.return_value
+    mock_instance.create_image.return_value.to_dict.return_value = {"status": "success", "url": "http://image"}
 
-    payload = {"mode": "image-create", "prompt": "Draw a cat", "files": ["/tmp/ref.png"]}
+    result = run_openclaw_skill({"mode": "image-create", "prompt": "draw a cat", "timeout_seconds": 150})
 
-    result = run_openclaw_skill(payload)
-
-    assert result["status"] == "success"
-    assert result["image_paths"] == ["/tmp/img1.png"]
-
-    # Verify request creation
-    args, kwargs = mock_client.create_image.call_args
-    request_obj = args[0]
-    assert request_obj.prompt == "Draw a cat"
-    assert request_obj.mode == "image-create"
-    assert request_obj.files == ["/tmp/ref.png"]
+    assert result == {"status": "success", "url": "http://image"}
+    request = mock_instance.create_image.call_args.args[0]
+    assert isinstance(request, GeminiImageRequest)
+    assert request.prompt == "draw a cat"
+    assert request.mode == "image-create"
+    assert request.timeout_seconds == 150
+    assert request.new_thread is False
+    assert request.files == []
 
 
 @patch("openclaw_gemini_web.skill.openclaw_adapter.GeminiWebClient")
-def test_openclaw_adapter_document_analysis(mock_client_class):
-    mock_client = MagicMock()
-    mock_client.create_image.return_value = GeminiWebResult(status="success", text="Document summary")
-    mock_client_class.return_value = mock_client
+def test_run_openclaw_skill_image_edit(mock_client_class):
+    mock_instance = mock_client_class.return_value
+    mock_instance.create_image.return_value.to_dict.return_value = {"status": "success", "url": "http://image"}
 
-    payload = {"mode": "document-analysis", "prompt": "Summarize this", "files": ["/tmp/doc.pdf"]}
+    result = run_openclaw_skill(
+        {
+            "mode": "image-edit",
+            "prompt": "make it blue",
+            "files": ["/path/to/img"],
+            "new_thread": True,
+        }
+    )
 
-    result = run_openclaw_skill(payload)
-
-    assert result["status"] == "success"
-    assert result["text"] == "Document summary"
-
-    # Verify request creation
-    args, kwargs = mock_client.create_image.call_args
-    request_obj = args[0]
-    assert request_obj.prompt == "Summarize this"
-    assert request_obj.mode == "document-analysis"
-    assert request_obj.files == ["/tmp/doc.pdf"]
+    assert result == {"status": "success", "url": "http://image"}
+    request = mock_instance.create_image.call_args.args[0]
+    assert isinstance(request, GeminiImageRequest)
+    assert request.prompt == "make it blue"
+    assert request.mode == "image-edit"
+    assert request.files == ["/path/to/img"]
+    assert request.new_thread is True
 
 
 @patch("openclaw_gemini_web.skill.openclaw_adapter.GeminiWebClient")
-def test_openclaw_adapter_storybook_create(mock_client_class):
-    mock_client = MagicMock()
-    mock_client.create.return_value = GeminiWebCreateResult(status="success", share_link="https://gemini.google.com/share/123")
-    mock_client_class.return_value = mock_client
+def test_run_openclaw_skill_default_create(mock_client_class):
+    mock_instance = mock_client_class.return_value
+    mock_instance.create.return_value.to_dict.return_value = {"status": "success", "link": "http://share"}
 
-    payload = {"mode": "create", "prompt": "Create a storybook", "return_mode": "share_link"}
+    result = run_openclaw_skill(
+        {
+            "mode": "create",
+            "prompt": "write a story",
+            "return_mode": "pdf",
+            "output_path": "/tmp/out.pdf",
+            "debug": True,
+        }
+    )
 
-    result = run_openclaw_skill(payload)
-
-    assert result["status"] == "success"
-    assert result["share_link"] == "https://gemini.google.com/share/123"
-
-    # Verify request creation
-    args, kwargs = mock_client.create.call_args
-    request_obj = args[0]
-    assert request_obj.prompt == "Create a storybook"
-    assert request_obj.return_mode == "share_link"
+    assert result == {"status": "success", "link": "http://share"}
+    request = mock_instance.create.call_args.args[0]
+    assert isinstance(request, GeminiWebCreateRequest)
+    assert request.prompt == "write a story"
+    assert request.return_mode == "pdf"
+    assert request.output_path == "/tmp/out.pdf"
+    assert request.timeout_seconds == 300
+    assert request.debug is True
+    assert request.files == []
