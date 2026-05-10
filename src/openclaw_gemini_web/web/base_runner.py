@@ -389,6 +389,17 @@ class GeminiWebRunnerBase:
         except Exception:
             return None
 
+    def _trigger_and_set_files(self, page, locator, files: list[str]) -> bool:
+        try:
+            with page.expect_file_chooser(timeout=15000) as fc:
+                locator.first.click(force=True)
+            chooser = fc.value
+            chooser.set_files(files)
+            page.wait_for_timeout(1500)
+            return True
+        except Exception:
+            return False
+
     def _upload_files(self, page, files: list[str]) -> None:
         missing = [f for f in files if not Path(f).exists()]
         if missing:
@@ -411,12 +422,8 @@ class GeminiWebRunnerBase:
                     try:
                         open_menu.first.click(force=True)
                         page.wait_for_timeout(500)
-                        with page.expect_file_chooser(timeout=15000) as fc:
-                            page.get_by_role("menuitem", name=menu_label).first.click(force=True)
-                        chooser = fc.value
-                        chooser.set_files(normalized)
-                        page.wait_for_timeout(1500)
-                        return
+                        if self._trigger_and_set_files(page, page.get_by_role("menuitem", name=menu_label), normalized):
+                            return
                     except Exception:
                         continue
         except Exception:
@@ -427,12 +434,8 @@ class GeminiWebRunnerBase:
                 trigger = page.locator(selector)
                 if trigger.count() == 0:
                     continue
-                with page.expect_file_chooser(timeout=15000) as fc:
-                    trigger.first.click(force=True)
-                chooser = fc.value
-                chooser.set_files(normalized)
-                page.wait_for_timeout(1500)
-                return
+                if self._trigger_and_set_files(page, trigger, normalized):
+                    return
             except Exception:
                 continue
 
@@ -446,12 +449,8 @@ class GeminiWebRunnerBase:
                 button = page.get_by_role("button", name=pattern)
                 if button.count() == 0:
                     continue
-                with page.expect_file_chooser(timeout=15000) as fc:
-                    button.first.click(force=True)
-                chooser = fc.value
-                chooser.set_files(normalized)
-                page.wait_for_timeout(1500)
-                return
+                if self._trigger_and_set_files(page, button, normalized):
+                    return
             except Exception:
                 continue
 
